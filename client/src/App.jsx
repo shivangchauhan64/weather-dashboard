@@ -3,7 +3,7 @@ import Sidebar from './components/Sidebar';
 import WeatherCard from './components/WeatherCard';
 import CityCard from './components/CityCard';
 
-const API_BASE = 'http://localhost:5050';
+const API_BASE = process.env.REACT_APP_API_BASE || 'https://weather-dashboard-farp.onrender.com';
 
 function App() {
   const [city, setCity] = useState('');
