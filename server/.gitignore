@@ -1,3 +1,5 @@
-node_modules, 
-.env, 
-data.db*
+node_modules/
+server/node_modules/
+server/data.db
+.env
+server/.env
