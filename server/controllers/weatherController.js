@@ -1,13 +1,12 @@
-import fetch from "node-fetch";
-
+import fetch from 'node-fetch';
 import { getCached, setCached, addFavorite, removeFavorite, getFavorites } from '../models/database.js';
 
 const weatherController = {
   getWeather: async (req, res) => {
     const city = req.query.city;
-    if (!city) return res.status(400).json({ error: "City is required" });
+    if (!city) return res.status(400).json({ error: 'City is required' });
 
-    const cached = getCached("current", city, process.env.CACHE_TTL_CURRENT);
+    const cached = await getCached('current', city, process.env.CACHE_TTL_CURRENT);
     if (cached) return res.json(cached);
 
     try {
@@ -30,18 +29,18 @@ const weatherController = {
         sunrise: data.sys.sunrise,
         sunset: data.sys.sunset,
       };
-      setCached("current", city, weatherData);
+      await setCached('current', city, weatherData);
       res.json(weatherData);
     } catch (err) {
-      res.status(500).json({ error: "Server error" });
+      res.status(500).json({ error: 'Server error' });
     }
   },
 
   getForecast: async (req, res) => {
     const city = req.query.city;
-    if (!city) return res.status(400).json({ error: "City is required" });
+    if (!city) return res.status(400).json({ error: 'City is required' });
 
-    const cached = getCached("forecast", city, process.env.CACHE_TTL_FORECAST);
+    const cached = await getCached('forecast', city, process.env.CACHE_TTL_FORECAST);
     if (cached) return res.json(cached);
 
     try {
@@ -50,7 +49,7 @@ const weatherController = {
       const response = await fetch(url);
       const data = await response.json();
 
-      if (data.cod !== "200") {
+      if (data.cod !== '200') {
         return res.status(404).json({ error: data.message });
       }
 
@@ -71,34 +70,42 @@ const weatherController = {
         }
       });
 
-      setCached("forecast", city, daily.slice(0, 5));
+      await setCached('forecast', city, daily.slice(0, 5));
       res.json(daily.slice(0, 5));
     } catch (err) {
-      res.status(500).json({ error: "Server error" });
+      res.status(500).json({ error: 'Server error' });
     }
   },
 
-  getFavorites: (req, res) => {
-    const favorites = getFavorites();
-    res.json(favorites);
+  getFavorites: async (req, res) => {
+    try {
+      const favorites = await getFavorites();
+      res.json(favorites);
+    } catch (err) {
+      res.status(500).json({ error: 'DB error' });
+    }
   },
 
-  addFavorite: (req, res) => {
+  addFavorite: async (req, res) => {
     const { city } = req.body;
-    if (!city) return res.status(400).json({ error: "City required" });
+    if (!city) return res.status(400).json({ error: 'City required' });
     try {
-      addFavorite(city);
+      await addFavorite(city);
       res.json({ success: true });
     } catch (err) {
-      res.status(500).json({ error: "DB error" });
+      res.status(500).json({ error: 'DB error' });
     }
   },
 
-  removeFavorite: (req, res) => {
+  removeFavorite: async (req, res) => {
     const { city } = req.body;
-    if (!city) return res.status(400).json({ error: "City required" });
-    removeFavorite(city);
-    res.json({ success: true });
+    if (!city) return res.status(400).json({ error: 'City required' });
+    try {
+      await removeFavorite(city);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: 'DB error' });
+    }
   },
 
   getGeocode: async (req, res) => {
@@ -127,7 +134,7 @@ const weatherController = {
     } catch (err) {
       res.status(500).json({});
     }
-  }
+  },
 };
 
 export default weatherController;

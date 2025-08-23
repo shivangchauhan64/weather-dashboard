@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
-import weatherController from './controllers/weatherController.js'; // Default import
+import weatherController from './controllers/weatherController.js'; 
 
 dotenv.config();
 
@@ -11,7 +11,6 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 5050;
 
-// Routes
 app.get('/weather', weatherController.getWeather);
 app.get('/forecast', weatherController.getForecast);
 app.get('/favorites', weatherController.getFavorites);

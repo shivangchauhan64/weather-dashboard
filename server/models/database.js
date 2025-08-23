@@ -1,43 +1,53 @@
-import Database from "better-sqlite3";
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
 
-const db = new Database("./data.db", { verbose: console.log });
+async function initDb() {
+  const db = await open({
+    filename: './data.db',
+    driver: sqlite3.Database,
+  });
 
-// Initialize DB tables
-db.exec(`
-  CREATE TABLE IF NOT EXISTS cache (
-    type TEXT,
-    city TEXT,
-    data TEXT,
-    timestamp INTEGER,
-    UNIQUE(type, city)
-  );
-  CREATE TABLE IF NOT EXISTS favorites (
-    city TEXT UNIQUE
-  );
-`);
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS cache (
+      type TEXT,
+      city TEXT,
+      data TEXT,
+      timestamp INTEGER,
+      UNIQUE(type, city)
+    );
+    CREATE TABLE IF NOT EXISTS favorites (
+      city TEXT UNIQUE
+    );
+  `);
+  return db;
+}
 
-export const getCached = (type, city, ttl) => {
-  const row = db.prepare("SELECT data, timestamp FROM cache WHERE type = ? AND city = ?").get(type, city.toLowerCase());
+const db = await initDb();
+
+export const getCached = async (type, city, ttl) => {
+  const row = await db.get('SELECT data, timestamp FROM cache WHERE type = ? AND city = ?', [type, city.toLowerCase()]);
   if (row && (Date.now() - row.timestamp < ttl * 1000)) {
     return JSON.parse(row.data);
   }
   return null;
 };
 
-export const setCached = (type, city, data) => {
-  db.prepare("INSERT OR REPLACE INTO cache (type, city, data, timestamp) VALUES (?, ?, ?, ?)")
-    .run(type, city.toLowerCase(), JSON.stringify(data), Date.now());
+export const setCached = async (type, city, data) => {
+  await db.run(
+    'INSERT OR REPLACE INTO cache (type, city, data, timestamp) VALUES (?, ?, ?, ?)',
+    [type, city.toLowerCase(), JSON.stringify(data), Date.now()]
+  );
 };
 
-export const addFavorite = (city) => {
-  db.prepare("INSERT OR IGNORE INTO favorites (city) VALUES (?)").run(city);
+export const addFavorite = async (city) => {
+  await db.run('INSERT OR IGNORE INTO favorites (city) VALUES (?)', [city]);
 };
 
-export const removeFavorite = (city) => {
-  db.prepare("DELETE FROM favorites WHERE city = ?").run(city);
+export const removeFavorite = async (city) => {
+  await db.run('DELETE FROM favorites WHERE city = ?', [city]);
 };
 
-export const getFavorites = () => {
-  const rows = db.prepare("SELECT city FROM favorites").all();
+export const getFavorites = async () => {
+  const rows = await db.all('SELECT city FROM favorites');
   return rows.map((r) => r.city);
 };
