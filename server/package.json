@@ -2,6 +2,9 @@
   "name": "weather-api",
   "type": "module",
   "version": "1.0.0",
+  "engines": {
+    "node": "20.17.0"
+  },
   "scripts": {
     "dev": "node --watch index.js",
     "start": "node index.js",

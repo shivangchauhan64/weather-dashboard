@@ -2,8 +2,9 @@ import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 
 async function initDb() {
+  const dbPath = process.env.NODE_ENV === 'production' ? '/opt/render/project/src/data.db' : './data.db';
   const db = await open({
-    filename: './data.db',
+    filename: dbPath,
     driver: sqlite3.Database,
   });
 
