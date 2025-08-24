@@ -3,7 +3,7 @@ import Sidebar from './components/Sidebar';
 import WeatherCard from './components/WeatherCard';
 import CityCard from './components/CityCard';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://weather-dashboard-farp.onrender.com';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://weather-dashboard-backend-gdte.onrender.com'; // Fixed to match backend
 
 function App() {
   const [city, setCity] = useState('');
@@ -32,7 +32,7 @@ function App() {
     }
   }, [darkMode]);
 
-  useEffect(() => {
+  const fetchLocation = () => {
     if (favorites.length === 0) {
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
@@ -47,14 +47,18 @@ function App() {
             }
           } catch (err) {
             console.error('Geolocation fetch error:', err);
+            setErrorMsg('Error fetching location');
+            setTimeout(() => setErrorMsg(''), 3000);
           }
         },
         (err) => {
           console.error('Geolocation denied:', err);
+          setErrorMsg('Geolocation permission denied');
+          setTimeout(() => setErrorMsg(''), 3000);
         }
       );
     }
-  }, [favorites]);
+  };
 
   const debounce = (func, delay) => {
     let timeout;
@@ -95,10 +99,13 @@ function App() {
   const fetchFavorites = async () => {
     try {
       const res = await fetch(`${API_BASE}/favorites`);
+      if (!res.ok) throw new Error('Network response was not ok');
       const data = await res.json();
       setFavorites(data);
     } catch (err) {
       console.error('Error fetching favorites:', err);
+      setErrorMsg('Error fetching favorites');
+      setTimeout(() => setErrorMsg(''), 3000);
     }
   };
 
@@ -217,6 +224,12 @@ function App() {
           <div className="col-span-full flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
             <h2 className="text-xl md:text-2xl mb-4 text-center">Search for the weather in your current city or any other.</h2>
             <p className="text-sm md:text-base">Use the sidebar to add cities.</p>
+            <button
+              onClick={fetchLocation}
+              className="mt-4 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-white text-sm md:text-base"
+            >
+              Use My Location
+            </button>
           </div>
         ) : (
           <p className="col-span-full text-center text-sm md:text-base">Select a city to view details</p>
