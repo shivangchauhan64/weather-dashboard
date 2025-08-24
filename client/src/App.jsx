@@ -33,32 +33,32 @@ function App() {
   }, [darkMode]);
 
   const fetchLocation = () => {
-    if (favorites.length === 0) {
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const { latitude, longitude } = pos.coords;
-          try {
-            const res = await fetch(`${API_BASE}/reverse?lat=${latitude}&lon=${longitude}`);
-            const data = await res.json();
-            if (data.name) {
-              setPreviewCity(data.name);
-              fetchWeather(data.name);
-              fetchForecast(data.name);
-            }
-          } catch (err) {
-            console.error('Geolocation fetch error:', err);
-            setErrorMsg('Error fetching location');
-            setTimeout(() => setErrorMsg(''), 3000);
+  if (favorites.length === 0) {
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        try {
+          const res = await fetch(`${API_BASE.replace(/\/+$/, '')}/reverse?lat=${latitude}&lon=${longitude}`);
+          const data = await res.json();
+          if (data.name) {
+            setPreviewCity(data.name);
+            fetchWeather(data.name);
+            fetchForecast(data.name);
           }
-        },
-        (err) => {
-          console.error('Geolocation denied:', err);
-          setErrorMsg('Geolocation permission denied');
+        } catch (err) {
+          console.error('Geolocation fetch error:', err);
+          setErrorMsg('Error fetching location');
           setTimeout(() => setErrorMsg(''), 3000);
         }
-      );
-    }
-  };
+      },
+      (err) => {
+        console.error('Geolocation denied:', err);
+        setErrorMsg('Geolocation permission denied');
+        setTimeout(() => setErrorMsg(''), 3000);
+      }
+    );
+  }
+};
 
   const debounce = (func, delay) => {
     let timeout;
