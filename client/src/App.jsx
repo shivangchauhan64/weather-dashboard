@@ -3,7 +3,7 @@ import Sidebar from './components/Sidebar';
 import WeatherCard from './components/WeatherCard';
 import CityCard from './components/CityCard';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://weather-dashboard-backend-gdte.onrender.com'; // Fixed to match backend
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://weather-dashboard-backend-gdte.onrender.com';
 
 function App() {
   const [city, setCity] = useState('');
@@ -33,32 +33,33 @@ function App() {
   }, [darkMode]);
 
   const fetchLocation = () => {
-  if (favorites.length === 0) {
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude, longitude } = pos.coords;
-        try {
-          const res = await fetch(`${API_BASE.replace(/\/+$/, '')}/reverse?lat=${latitude}&lon=${longitude}`);
-          const data = await res.json();
-          if (data.name) {
-            setPreviewCity(data.name);
-            fetchWeather(data.name);
-            fetchForecast(data.name);
+    if (favorites.length === 0) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude, longitude } = pos.coords;
+          try {
+            const baseUrl = API_BASE.replace(/\/+$/, '');
+            const res = await fetch(`${baseUrl}/reverse?lat=${latitude}&lon=${longitude}`);
+            const data = await res.json();
+            if (data.name) {
+              setPreviewCity(data.name);
+              fetchWeather(data.name);
+              fetchForecast(data.name);
+            }
+          } catch (err) {
+            console.error('Geolocation fetch error:', err);
+            setErrorMsg('Error fetching location');
+            setTimeout(() => setErrorMsg(''), 3000);
           }
-        } catch (err) {
-          console.error('Geolocation fetch error:', err);
-          setErrorMsg('Error fetching location');
+        },
+        (err) => {
+          console.error('Geolocation denied:', err);
+          setErrorMsg('Geolocation permission denied');
           setTimeout(() => setErrorMsg(''), 3000);
         }
-      },
-      (err) => {
-        console.error('Geolocation denied:', err);
-        setErrorMsg('Geolocation permission denied');
-        setTimeout(() => setErrorMsg(''), 3000);
-      }
-    );
-  }
-};
+      );
+    }
+  };
 
   const debounce = (func, delay) => {
     let timeout;
@@ -72,7 +73,8 @@ function App() {
     debounce(async (query) => {
       if (query.length > 2) {
         try {
-          const res = await fetch(`${API_BASE}/geocode?q=${query}`);
+          const baseUrl = API_BASE.replace(/\/+$/, '');
+          const res = await fetch(`${baseUrl}/geocode?q=${query}`);
           const data = await res.json();
           setSuggestions(data);
           if (data.length === 0) {
@@ -98,7 +100,8 @@ function App() {
 
   const fetchFavorites = async () => {
     try {
-      const res = await fetch(`${API_BASE}/favorites`);
+      const baseUrl = API_BASE.replace(/\/+$/, '');
+      const res = await fetch(`${baseUrl}/favorites`);
       if (!res.ok) throw new Error('Network response was not ok');
       const data = await res.json();
       setFavorites(data);
@@ -111,7 +114,8 @@ function App() {
 
   const fetchWeather = async (city) => {
     try {
-      const res = await fetch(`${API_BASE}/weather?city=${city}`);
+      const baseUrl = API_BASE.replace(/\/+$/, '');
+      const res = await fetch(`${baseUrl}/weather?city=${city}`);
       if (!res.ok) throw new Error('Bad response');
       const data = await res.json();
       setWeatherData((prev) => ({ ...prev, [city]: data }));
@@ -122,7 +126,8 @@ function App() {
 
   const fetchForecast = async (city) => {
     try {
-      const res = await fetch(`${API_BASE}/forecast?city=${city}`);
+      const baseUrl = API_BASE.replace(/\/+$/, '');
+      const res = await fetch(`${baseUrl}/forecast?city=${city}`);
       if (!res.ok) throw new Error('Bad response');
       const data = await res.json();
       setForecastData((prev) => ({ ...prev, [city]: data }));
@@ -135,9 +140,10 @@ function App() {
     const cityToAdd = toAdd || city;
     if (!cityToAdd || favorites.includes(cityToAdd)) return;
     try {
-      const res = await fetch(`${API_BASE}/weather?city=${cityToAdd}`);
+      const baseUrl = API_BASE.replace(/\/+$/, '');
+      const res = await fetch(`${baseUrl}/weather?city=${cityToAdd}`);
       if (!res.ok) throw new Error('Invalid city');
-      await fetch(`${API_BASE}/favorites/add`, {
+      await fetch(`${baseUrl}/favorites/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ city: cityToAdd }),
@@ -155,7 +161,8 @@ function App() {
 
   const removeCity = async (city) => {
     try {
-      await fetch(`${API_BASE}/favorites/remove`, {
+      const baseUrl = API_BASE.replace(/\/+$/, '');
+      await fetch(`${baseUrl}/favorites/remove`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ city }),
